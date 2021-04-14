@@ -5,6 +5,7 @@
 
 # Imports
 import RPi.GPIO as GPIO
+from gpiozero import Device, LED, Buzzer, Button
 from ADCDevice import *
 import time
 from Sensor import *
@@ -16,6 +17,7 @@ from Sensor import *
 # Global variables
 FlameSensor = None
 GasSensor = None
+Leds = [None, None]
 
 # Functions
 def init():

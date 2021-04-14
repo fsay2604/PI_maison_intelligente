@@ -7,7 +7,6 @@ class ventilation:
     ENABLE_PIN = 18
     motor = None
     
-    
     def __init__(self):
         self.motor = Motor(forward=self.MOTOR_PINS[1], backward=self.MOTOR_PINS[0],enable=self.ENABLE_PIN,pwm=True)
         self.motor.stop()

@@ -5,8 +5,8 @@
 # Author      : freenove
 # modification: 2018/08/03
 ########################################################################
-from controller import PCF8574
-from controller import Adafruit_LCD1602
+from Sensor import PCF8574
+from Sensor import Adafruit_LCD1602
 
 from time import sleep, strftime
 from datetime import datetime
