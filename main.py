@@ -8,35 +8,74 @@
 # Imports
 import RPi.GPIO as GPIO
 from gpiozero import Device, LED, Buzzer, Button
+from gpiozero.pins.pigpio import PiGPIOFactory
 from ADCDevice import *
+from Sensor.ventilation import ventilation
+from Sensor.lcd import lcd
+
+import paho.mqtt.client as mqtt
 import time
 
+# Initialize GPIO
+Device.pin_factory = PiGPIOFactory() # Set GPIOZero to use PiGPIO by default.
+
+
+# Global Variables
+BROKER_HOST = "localhost"                                                                       # (2)
+BROKER_PORT = 1883
+CLIENT_ID = "SYS_ALARME"                                                                         # (3)
+TOPIC = "SENSORS"                                                                                   # (4)
+client = None   # MQTT client instance. See init_mqtt()   
 
 ## PINS (header)
-# BTN = 17
-# Buzzer = 27
+ButtonPin = 17
+ButtonState = None
+BuzzerPin = 27
+buzzer = None
 
 # Global variables
 Leds = [None, None]
 
+ventilation = ventilation()
+lcd = lcd()
+
+
+fire_state = {
+    'status' : 'off'
+}
+
+
+gas_state = {
+    'status' : 'off'
+}
+
+
+
+def button_pressed():
+    pass
+
+
 # Functions
 def init():
-    global adc, FlameSensor, GasSensor
-    # ADC
-    if(adc.detectI2C(0x48)):    # Detect the pcf8591.
-        adc = PCF8591()
-    elif(adc.detectI2C(0x4b)):  # Detect the ads7830
-        adc = ADS7830()
-    else:
-        print("No correct I2C address found, \n"
-        "Please use command 'i2cdetect -y 1' to check the I2C address! \n"
-        "Program Exit. \n");
-        exit(-1)
+    global leds
+    global ButtonState
+    global buzzer
+    
+    
+    Leds[0] = LED(16)
+    Leds[0].off()
+    Leds[1] = LED(21)
+    Leds[1].off()
+   
+   
+    ButtonState = Button(ButtonPin, pull_up=True, bounce_time=0.1)
+    ButtonState.when_pressed = button_pressed
 
-# Fonction principale qui loop
-def loop():
-    while True:
-        pass
+    buzzer = Buzzer(BuzzerPin,active_high = False)
+    buzzer.off()
+
+
+
 
 """
 MQTT Related Functions and Callbacks
@@ -55,9 +94,7 @@ def on_connect(client, user_data, flags, connection_result_code):
         logger.error("Failed to connect to MQTT Broker: " + mqtt.connack_string(connection_result_code))
 
     # Subscribe to the topic 
-    #client.subscribe(TOPIC[0], qos=2)   # Led
-    #client.subscribe(TOPIC[1], qos=2)   # Door
-    #client.subscribe(TOPIC[2], qos=2)   # Alarm  
+    client.subscribe(TOPIC, qos=2)   # Led 
 
 
 
@@ -78,29 +115,28 @@ def on_message(client, userdata, msg):
     except json.JSONDecodeError as e:
         logger.error("JSON Decode Error: " + msg.payload.decode("UTF-8"))
 
-    #if msg.topic == TOPIC[0]: 
-    #    set_led_state(data) 
-    #elif msg.topic == TOPIC[1]:
-    #    set_door_state(data) 
-    #elif msg.topic == TOPIC[2]: 
-    #    set_buzzer_state(data)   
-    #else:
-    #    logger.error("Unhandled message topic {} with payload " + str(msg.topic, msg.payload))
+        if "FLAME_STATE" in data:
+            #setLed(data)
+        if "GAS_STATE" in data:
+            #setDoor(data)
+        if "VENTILATION" in data:
+            #setAlarm(data)  
+    else:
+        logger.error("Unhandled message topic {} with payload " + str(msg.topic, msg.payload))
 
 
 
 def signal_handler(sig, frame):
     """Capture Control+C and disconnect from Broker."""
-    #global led_principale
-    #global led_secondaire
-    #global buzzer
+    global buzzer
+    global Leds
 
     logger.info("You pressed Control + C. Shutting down, please wait...")
 
     client.disconnect() # Graceful disconnection.
-    #led_principale.off()
-    #led_secondaire.off()
-    #buzzer.off()
+    Leds[0].off()
+    Leds[1].off()
+    buzzer.off()
     sys.exit(0)
 
 
@@ -130,9 +166,16 @@ def init_mqtt():
 
 ### DEBUT DU SCRIPT ####
 if __name__ == '__main__':
-    	init()
+    init()
+    init_mqtt()
     try:
-        loop()
+        while True:
+            ventilation.move(0)
+            Leds[0].off()
+            Leds[1].off()
+            buzzer.on()
+            lcd.set_message("Allo")
     except KeyboardInterrupt: 
         GPIO.cleanup()
+        buzzer.off()
         print ('The end !')
