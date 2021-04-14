@@ -8,11 +8,10 @@
 import RPi.GPIO as GPIO
 
 class Flame_Sensor:
-	FlamePin = None
+	FlamePin = 22
 
 	# Constructeur
-	def __init__(self, FlamePin):
-		self.FlamePin = FlamePin
+	def __init__(self):
 		GPIO.setmode(GPIO.BOARD)
 		GPIO.setup(self.FlamePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 		GPIO.add_event_detect(self.FlamePin, GPIO.FALLING, callback=self.myISR)
