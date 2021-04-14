@@ -13,8 +13,12 @@ Detecteur de fumee: Detecteur de flamme avec buzzer
 
 Chauffage : Détecteur de température
 
-boutons pour activé et désactivé les système 
+### Interface physique
 
-Keypad pour entrer un code qui ouvre la porte
+Boutons pour activé et désactivé le système.
 
-LCD screen : Affichage de la température et l'état du système
+Led qui indique si le systeme est armé ou non.
+
+Keypad pour entrer un code qui ouvre la porte.
+
+LCD screen : Affichage de la température et l'état du système.
