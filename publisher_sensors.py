@@ -18,8 +18,12 @@ import time
 
 # Global variables
 FlameSensor = None
+FLAME_SENSOR_PREVIOUS_VAL = 0
+
 GasSensor = None
+GAS_SENSOR_PREVIOUS_VAL = 0
 #Temp_sensor = None #(DHT)
+#TEMP_SENSOR_PREVIOUS_VAL = 0
 adc = ADCDevice()
 
 TOPIC = 'SENSORS'
@@ -66,6 +70,12 @@ def loop():
             client.publish(TOPIC, payload=data, qos=0, retain=False)
             print("send {data} to {TOPIC}")
             time.sleep(1)
+        
+        if FLAME_SENSOR_PREVIOUS_VAL > 50 && flame_val < 50:
+            data = {'FLAME_STATE':'OFF'}
+            client.publish(TOPIC, payload=data, qos=0, retain=False)
+            print("send {data} to {TOPIC}")
+            time.sleep(1)
             
 
         # Récupération de la valeur du sensor et envoit du msg
@@ -75,9 +85,13 @@ def loop():
             client.publish(TOPIC, payload=data, qos=0, retain=False)
             print("send {data} to {TOPIC}")
             time.sleep(1)
+        
 
         # Récupération de la valeur du sensor et envoit du msg
         #TempSensor.read()
+
+        FLAME_SENSOR_PREVIOUS_VAL = flame_val
+        GAS_SENSOR_PREVIOUS_VAL = gas_val
 
 ####
 # Fonctions pour le MQTT
