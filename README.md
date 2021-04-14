@@ -19,6 +19,4 @@ Boutons pour activé et désactivé le système.
 
 Led qui indique si le systeme est armé ou non.
 
-Keypad pour entrer un code qui ouvre la porte.
-
 LCD screen : Affichage de la température et l'état du système.
