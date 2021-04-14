@@ -17,8 +17,8 @@ import time
 # Buzzer = 27
 
 # Global variables
-
 Leds = [None, None]
+
 # Functions
 def init():
     global adc, FlameSensor, GasSensor
