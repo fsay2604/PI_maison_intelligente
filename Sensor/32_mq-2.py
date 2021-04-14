@@ -5,9 +5,10 @@
 # Classe:	Représente le sensor de gaz. (pour notre détecteur de fumé)
 ##########################################################################
 
-class Gas_Sensor:`
+class Gas_Sensor:
 	# Constructeur
 	def __init__(self):
+    	pass
 
 	# Fonction qui lit la valeur et la renvoit.
 	def read(self, adc):
