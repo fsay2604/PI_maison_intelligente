@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##########################################################################
 # Auteurs:  Francois Charles Hebert & Samuel Fournier
@@ -7,15 +7,26 @@
 
 # Imports
 import paho.mqtt.client as mqtt
-from Sensor import *
+import signal
+import sys
+import logger
 from ADCDevice import *
+from Sensor.flame_sensor import Flame_Sensor
+from Sensor.gas_sensor import Gas_Sensor
+import json
+import time
 
 # Global variables
 FlameSensor = None
 GasSensor = None
 #Temp_sensor = None #(DHT)
 adc = ADCDevice()
+
 TOPIC = 'SENSORS'
+BROKER_HOST = '127.0.0.1'
+BROKER_PORT = 1883
+CLIENT_ID = 'SYS_ALARME_SENSORS'
+client = None
 
 def init():
     global FlameSensor
@@ -34,8 +45,8 @@ def init():
         "Program Exit. \n");
         exit(-1)
 
-    FlameSensor = Sensor.flame_sensor.Flame_Sensor()
-    GasSensor = Sensor.gas_sensor.Gas_Sensor()
+    FlameSensor = Flame_Sensor()
+    GasSensor = Gas_Sensor()
     #TempSensor = Sensor.Freenove_DHT.DHT()
 
 # Fonction qui va loop a l'infini et va lire les valeurs lu des differents sensor.
@@ -51,16 +62,18 @@ def loop():
         # Récupération de la valeur du sensor et envoit du msg
         flame_val = FlameSensor.read(adc)
         if(flame_val > 50):
-            client.publish(TOPIC, payload={ "stateLight": "off" }, qos=0, retain=False)
-            print("send to {TOPIC}")
+            data = {'FLAME_STATE':'ON'}
+            client.publish(TOPIC, payload=data, qos=0, retain=False)
+            print("send {data} to {TOPIC}")
             time.sleep(1)
             
 
         # Récupération de la valeur du sensor et envoit du msg
         gas_val = GasSensor.read(adc)
         if(gas_val > 50):
-            client.publish(TOPIC, payload={ "stateLight": "off" }, qos=0, retain=False)
-            print("send to {TOPIC}")
+            data = {'GAS_STATE':'ON'}
+            client.publish(TOPIC, payload=data, qos=0, retain=False)
+            print("send {data} to {TOPIC}")
             time.sleep(1)
 
         # Récupération de la valeur du sensor et envoit du msg
@@ -70,15 +83,28 @@ def loop():
 # Fonctions pour le MQTT
 ####
 def on_connect(client, userdata, flags, rc):
-    print(f"Connected with result code {rc}")
+    print("Connected with result code {rc}")
+
+def signal_handler(sig, frame):
+    """Capture Control+C and disconnect from Broker."""
+    logger.info("You pressed Control + C. Shutting down, please wait...")
+    client.disconnect() # Graceful disconnection.
+    sys.exit(0)
+
+def init_mqtt():
+    global client
+
+    client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
+    client.on_connect = on_connect
+
+    # create connection, the three parameters are broker address, broker port number, and keep-alive time respectively
+    client.connect(BROKER_HOST, BROKER_PORT)
 
 
-# Setting up la connection
-client = mqtt.Client()
-client.on_connect = on_connect
+init()
+init_mqtt()
 
-# create connection, the three parameters are broker address, broker port number, and keep-alive time respectively
-#client.connect("broker.emqx.io", 1883, 60)
-
-# set the network loop blocking, it will not actively end the program before calling disconnect() or the program crash
-#client.loop_forever()
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)  # Capture Control + C   
+    client.loop_start()
+    signal.pause()

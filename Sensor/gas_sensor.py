@@ -8,7 +8,7 @@
 class Gas_Sensor:
 	# Constructeur
 	def __init__(self):
-    	pass
+    		pass
 
 	# Fonction qui lit la valeur et la renvoit.
 	def read(self, adc):
