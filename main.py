@@ -12,6 +12,8 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 from ADCDevice import *
 from Sensor.ventilation import ventilation
 from Sensor.lcd import lcd
+import signal
+import json
 
 import paho.mqtt.client as mqtt
 import time
@@ -21,7 +23,7 @@ Device.pin_factory = PiGPIOFactory() # Set GPIOZero to use PiGPIO by default.
 
 
 # Global Variables
-BROKER_HOST = "localhost"                                                                       # (2)
+BROKER_HOST = "127.0.0.1"                                                                       # (2)
 BROKER_PORT = 1883
 CLIENT_ID = "SYS_ALARME"                                                                         # (3)
 TOPIC = "SENSORS"                                                                                   # (4)
@@ -86,13 +88,6 @@ def on_connect(client, user_data, flags, connection_result_code):
        This way if a connection is lost, the automatic
        re-connection will also results in the re-subscription occurring."""
 
-    if connection_result_code == 0: 
-        # 0 = successful connection
-        logger.info("Connected to MQTT Broker")
-    else:
-        # connack_string() gives us a user friendly string for a connection code.
-        logger.error("Failed to connect to MQTT Broker: " + mqtt.connack_string(connection_result_code))
-
     # Subscribe to the topic 
     client.subscribe(TOPIC, qos=2)   # Led 
 
@@ -100,30 +95,33 @@ def on_connect(client, user_data, flags, connection_result_code):
 
 def on_disconnect(client, user_data, disconnection_result_code):                         
     """Called disconnects from MQTT Broker."""
-    logger.error("Disconnected from MQTT Broker")
+    pass
 
 
 
 def on_message(client, userdata, msg):
     """Callback called when a message is received on a subscribed topic."""
-    logger.debug("Received message for topic {}: {}".format( msg.topic, msg.payload))
-
+    #logger.debug("Received message for topic {}: {}".format( msg.topic, msg.payload))
+    
     data = None
 
-    try:
-        data = json.loads(msg.payload.decode("UTF-8"))
-    except json.JSONDecodeError as e:
-        logger.error("JSON Decode Error: " + msg.payload.decode("UTF-8"))
 
-        if "FLAME_STATE" in data:
-            #setLed(data)
-        if "GAS_STATE" in data:
-            #setDoor(data)
-        if "VENTILATION" in data:
-            #setAlarm(data)  
-    else:
-        logger.error("Unhandled message topic {} with payload " + str(msg.topic, msg.payload))
+    data = json.loads(msg.payload.decode("UTF-8"))
 
+
+    if "FLAME_STATE" in data:
+        print("message received", str(msg.payload.decode("utf-8")))
+        print("message Topic= ", msg.topic)
+        #setLed(data)
+    if "GAS_STATE" in data:
+        print("message received", str(msg.payload.decode("utf-8")))
+        print("message Topic= ", msg.topic)
+        #setDoor(data)
+    if "VENTILATION" in data:
+        pass
+        #setAlarm(data)
+            
+   
 
 
 def signal_handler(sig, frame):
@@ -131,7 +129,7 @@ def signal_handler(sig, frame):
     global buzzer
     global Leds
 
-    logger.info("You pressed Control + C. Shutting down, please wait...")
+    #logger.info("You pressed Control + C. Shutting down, please wait...")
 
     client.disconnect() # Graceful disconnection.
     Leds[0].off()
@@ -143,6 +141,8 @@ def signal_handler(sig, frame):
 
 def init_mqtt():
     global client
+    global CLIENT_ID
+    global TOPIC
 
     # Our MQTT Client. See PAHO documentation for all configurable options.
     # "clean_session=True" means we don"t want Broker to retain QoS 1 and 2 messages
@@ -152,8 +152,7 @@ def init_mqtt():
         client_id=CLIENT_ID,
         clean_session=False)
 
-    # Route Paho logging to Python logging.
-    client.enable_logger()                                                                     # (16)
+    # Route Paho logging to Python logging.                                                                    # (16)
 
     # Setup callbacks
     client.on_connect = on_connect                                                             # (17)
@@ -161,20 +160,23 @@ def init_mqtt():
     client.on_message = on_message
 
     # Connect to Broker.
-    client.connect(BROKER_HOST, BROKER_PORT)                                                   # (18)
+    client.connect(BROKER_HOST, BROKER_PORT)
+    
+    #subscribe au file qui a flask
+    #client.subscribe(TOPIC, qos=2)
+
 
 
 ### DEBUT DU SCRIPT ####
 if __name__ == '__main__':
+    print("program starting..")
     init()
+    print("Apres init")
     init_mqtt()
+    print("Apres init MQTT")
     try:
-        while True:
-            ventilation.move(0)
-            Leds[0].off()
-            Leds[1].off()
-            buzzer.on()
-            lcd.set_message("Allo")
+        signal.signal(signal.SIGINT, signal_handler)  # Capture Control + C   
+        client.loop_forever()
     except KeyboardInterrupt: 
         GPIO.cleanup()
         buzzer.off()

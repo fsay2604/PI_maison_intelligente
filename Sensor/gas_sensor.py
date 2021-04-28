@@ -12,7 +12,7 @@ class Gas_Sensor:
 
 	# Fonction qui lit la valeur et la renvoit.
 	def read(self, adc):
-		value = adc.analogRead(0)			# Verifier le channel, probablement a changer! le sensor de flamme est sur le channel 0 aussi.
+		value = adc.analogRead(1)			# Verifier le channel, probablement a changer! le sensor de flamme est sur le channel 0 aussi.
 		print ('Gas concentration:', value)
 		return value
 

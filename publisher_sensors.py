@@ -7,9 +7,9 @@
 
 # Imports
 import paho.mqtt.client as mqtt
+import RPi.GPIO as GPIO
 import signal
 import sys
-import logger
 from ADCDevice import *
 from Sensor.flame_sensor import Flame_Sensor
 from Sensor.gas_sensor import Gas_Sensor
@@ -17,8 +17,7 @@ import json
 import time
 
 # Global variables
-FlameSensor = None
-FLAME_SENSOR_PREVIOUS_VAL = 0
+FlamePin = 15
 
 GasSensor = None
 GAS_SENSOR_PREVIOUS_VAL = 0
@@ -32,9 +31,21 @@ BROKER_PORT = 1883
 CLIENT_ID = 'SYS_ALARME_SENSORS'
 client = None
 
+
+
+# Callback qui s'execute lors de la detection de l'event
+def myISR(ev=None):
+    global TOPIC
+    print("Flame is detected !")
+    data = {'FLAME_STATE':'ON'}
+    client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
+    print("send {data} to {TOPIC}")
+
+
 def init():
     global FlameSensor
     global GasSensor
+    global FlamePin
     #global TempSensor
     global adc
 
@@ -49,7 +60,11 @@ def init():
         "Program Exit. \n");
         exit(-1)
 
-    FlameSensor = Flame_Sensor()
+    #Flame sensor init
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(FlamePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.add_event_detect(FlamePin, GPIO.FALLING, callback=myISR)
+    
     GasSensor = Gas_Sensor()
     #TempSensor = Sensor.Freenove_DHT.DHT()
 
@@ -58,26 +73,17 @@ def init():
 def loop():
     global TOPIC
     global FlameSensor
+    global FLAME_SENSOR_PREVIOUS_VAL
+    global GAS_SENSOR_PREVIOUS_VAL
     global GasSensor
     #global TempSensor
     global adc
 
     while True:
-        # Récupération de la valeur du sensor et envoit du msg
-        flame_val = FlameSensor.read(adc)
-        if(flame_val > 50):
-            data = {'FLAME_STATE':'ON'}
-            client.publish(TOPIC, payload=data, qos=0, retain=False)
-            print("send {data} to {TOPIC}")
-            time.sleep(1)
         
-        if FLAME_SENSOR_PREVIOUS_VAL > 50 and flame_val < 50:
-            data = {'FLAME_STATE':'OFF'}
-            client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
-            print("send {data} to {TOPIC}")
-            time.sleep(1)
-            
-
+        # Récupération de la valeur du sensor et envoit du msg
+        #flame_val = FlameSensor.read(adc)
+        readFlamme()
         # Récupération de la valeur du sensor et envoit du msg
         gas_val = GasSensor.read(adc)
         if(gas_val > 50):
@@ -85,23 +91,43 @@ def loop():
             client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
             print("send {data} to {TOPIC}")
             time.sleep(1)
+            
+        if (GAS_SENSOR_PREVIOUS_VAL >= 50 and gas_val < 50):
+            data = {'GAS_STATE':'OFF'}
+            client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
+            print("send {data} to {TOPIC}")
+            time.sleep(1)
         
 
         # Récupération de la valeur du sensor et envoit du msg
         #TempSensor.read()
-
-        FLAME_SENSOR_PREVIOUS_VAL = flame_val
+        
+        
         GAS_SENSOR_PREVIOUS_VAL = gas_val
+        time.sleep(0.5)
+        
+        
+        
+
+
+# Fonction qui lit la valeur et la renvoit.
+def readFlamme():
+    global adc
+    res = adc.analogRead(0) # read ADC value of channel 0
+    #print('res = ', res)
+    return res        
 
 ####
 # Fonctions pour le MQTT
 ####
+
+
+
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code {rc}")
 
 def signal_handler(sig, frame):
     """Capture Control+C and disconnect from Broker."""
-    logger.info("You pressed Control + C. Shutting down, please wait...")
     client.disconnect() # Graceful disconnection.
     sys.exit(0)
 
@@ -120,5 +146,5 @@ init_mqtt()
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)  # Capture Control + C   
-    client.loop_start()
+    loop()
     signal.pause()
