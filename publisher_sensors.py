@@ -73,7 +73,7 @@ def loop():
         
         if FLAME_SENSOR_PREVIOUS_VAL > 50 and flame_val < 50:
             data = {'FLAME_STATE':'OFF'}
-            client.publish(TOPIC, payload=data, qos=0, retain=False)
+            client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
             print("send {data} to {TOPIC}")
             time.sleep(1)
             
@@ -82,7 +82,7 @@ def loop():
         gas_val = GasSensor.read(adc)
         if(gas_val > 50):
             data = {'GAS_STATE':'ON'}
-            client.publish(TOPIC, payload=data, qos=0, retain=False)
+            client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
             print("send {data} to {TOPIC}")
             time.sleep(1)
         
