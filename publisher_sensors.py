@@ -71,7 +71,7 @@ def loop():
             print("send {data} to {TOPIC}")
             time.sleep(1)
         
-        if FLAME_SENSOR_PREVIOUS_VAL > 50 && flame_val < 50:
+        if FLAME_SENSOR_PREVIOUS_VAL > 50 and flame_val < 50:
             data = {'FLAME_STATE':'OFF'}
             client.publish(TOPIC, payload=data, qos=0, retain=False)
             print("send {data} to {TOPIC}")
