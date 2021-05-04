@@ -138,50 +138,49 @@ def on_message(client, userdata, msg):
 
 
     if "FLAME_STATE" in data:
-        print("message received", str(msg.payload.decode("utf-8")))
-        print("message Topic= ", msg.topic)
+        #print("message received", str(msg.payload.decode("utf-8")))
+        #print("message Topic= ", msg.topic)
         # Gestion du state de la ventilation
-        if data['status'] == 'on':
+        if data['FLAME_STATE'] == 'on':
             fire_state['status'] = 'on'
-        if data['status'] == 'off':
+        if data['FLAME_STATE'] == 'off':
             fire_state['status'] = 'off'
 
-        # Envoit au web du message recu pour update l'UI
-        client.publish(TOPIC_WEB,data);
+
 
     if "GAS_STATE" in data:
-        print("message received", str(msg.payload.decode("utf-8")))
-        print("message Topic= ", msg.topic)
+        #print("message received", str(msg.payload.decode("utf-8")))
+        #print("message Topic= ", msg.topic)
         # Gestion du state de la ventilation
-        if data['status'] == 'on':
+        if data['GAS_STATE'] == 'on':
             gas_state['status'] = 'on'
-        if data['status'] == 'off':
+        if data['GAS_STATE'] == 'off':
             gas_state['status'] = 'off'
 
-        # Envoit au web du message recu pour update l'UI
-        client.publish(TOPIC_WEB,data);
+
 
     if "VENTILATION" in data:
-        print("message received", str(msg.payload.decode("utf-8")))
-        print("message Topic= ", msg.topic)
+        #print("message received", str(msg.payload.decode("utf-8")))
+        #print("message Topic= ", msg.topic)
         # Gestion du state de la ventilation
-        if data['status'] == 'on':
+        if data['VENTILATION'] == 'on':
             ventilation_state['status'] = 'on'
-        if data['status'] == 'off':
+        if data['VENTILATION'] == 'off':
             ventilation_state['status'] = 'off'
        
     if "ALARM" in data:
-        print("message received", str(msg.payload.decode("utf-8")))
-        print("message Topic= ", msg.topic)
+        #print("message received", str(msg.payload.decode("utf-8")))
+        #print("message Topic= ", msg.topic)
         # Gestion du state du systeme d'alarme
-        if data['status'] == 'on':
+        if data['ALARM'] == 'on':
             alarm_state['status'] = 'on'
-        if data['status'] == 'off':
+        if data['ALARM'] == 'off':
             alarm_state['status'] = 'off'
 
 
     # Gestion de la logique en fonction des states
     logic()
+    client.publish(TOPIC_WEB,payload=json.dumps(data))
 
 
 def signal_handler(sig, frame):

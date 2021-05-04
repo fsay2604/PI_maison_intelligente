@@ -8,7 +8,7 @@
     <script type="text/javascript" charset="utf-8">
 
         const CLIENT_ID = String(Math.floor(Math.random() * 10e16))                            // (2)
-        const TOPIC   = "systemeAlarm";                                                                 // (3)
+        const TOPIC   = "MAINBOARD";                                                                 // (3)
 
         // Web Socket MQTT Client Object.
         const client = new Paho.Client(location.hostname, Number(location.port), CLIENT_ID);   // (4)
@@ -17,9 +17,7 @@
         onConnectionSuccess = function(data) {                                                 // (5)
             console.log("Connected to MQTT Broker");
             $("#connected").html("Yes");
-            //$("input[type=range].brightnessLevel").attr("disabled", null);
 
-            // Receive LED level messages.                                                     // (6)
             client.subscribe(TOPIC);
         };
 
@@ -43,14 +41,72 @@
         // Callback when a new message arrives at a subscribed topic.
         client.onMessageArrived = function onMessageArrived(message) {                         // (9)
 
-            console.log("onMessageArrived:" + message.payloadString + " for topic " + message.destinationName);
+            //console.log("onMessageArrived:" + message.payloadString + " for topic " + message.destinationName);
 
-            //var data = JSON.parse(message.payloadString);
+            var data = JSON.parse(message.payloadString);
 
-            //if (message.destinationName === TOPIC) {
-              //  $("input[type=range].brightnessLevel").val(data.level);
-                //$("#brightnessLevel").html(data.level);
-            //}
+
+            if (message.destinationName === TOPIC) {
+
+                //Si Ventilation fait partie du message, change le bouton approprier
+                if(data.VENTILATION){
+                    
+                    if(data.VENTILATION == "off"){
+                        $("#ventilation").val("off");
+                        $("#ventilation").html("Ouvrir la Ventilation");
+                    }
+                    else{
+                        $("#ventilation").val("on");
+                        $("#ventilation").html("Fermer la Ventilation");
+                    }
+                    
+                }
+                
+                
+                
+                //Si Ventilation fait partie du message, change le bouton approprier
+                if(data.ALARM){
+                    
+                    if(data.ALARM == "off"){
+                        $("#alarm").val("off");
+                        $("#alarm").html("Ouvrir le systeme d'alarme");
+                    }
+                    else{
+                        $("#alarm").val("on");
+                        $("#alarm").html("Fermer le systeme d'alarme");
+                    }
+                    
+                }
+                
+                
+                //Si il y le feux, affiche ou enleve le message lorsque le feux est off ou on
+                if(data.FLAME_STATE){
+                    
+                    if(data.FLAME_STATE == "off"){
+                        $("#messageFeu").html("");
+                    }
+                    else{
+                        $("#messageFeu").html("Il a un feu, veuillez quitter votre domicile");
+                    }
+                    
+                }
+                
+                
+                 //Si il y le gas, affiche ou enleve le message lorsque le gas est off ou on
+                if(data.GAS_STATE){
+                    
+                    if(data.GAS_STATE == "off"){
+                        $("#messageGaz").html("");
+                    }
+                    else{
+                        $("#messageGaz").html("Le gaz est trop elever , veuillez quitter votre domicile");
+                    }
+                    
+                }
+                
+                
+                
+            }
         }
 
 
@@ -59,67 +115,43 @@
             $("#clientId").html(CLIENT_ID);
             
             
-            $( "#ledPrincipale" ).click(function() {
+            $( "#ventilation" ).click(function() {
             
             if(this.value == "off"){
                 this.value = "on"
-                $("#ledPrincipale").html("Fermer la lumiere");
+                $("#ventilation").html("Fermer la Ventilation");
             }
             else{
                 this.value = "off"
-                $("#ledPrincipale").html("Ouvrir la lumiere");
+                $("#ventilation").html("Ouvrir la Ventilation");
             }
-            payload = { "led": this.value } 
+            payload = { "VENTILATION": this.value } 
             
-            // Publish LED brightness.
+            
                 var message = new Paho.Message(                                                // (11)
                    JSON.stringify(payload)
                 );
 
                 message.destinationName = TOPIC;                                               // (12)
-                message.qos = 2;
+                message.qos = 1;
                 message.retained = true;                                                       // (13)
                 client.send(message);
             
             });
             
-            
-            
-            $( "#porte" ).click(function() {
-            
-            if(this.value == "close"){
-                this.value = "open"
-                $("#porte").html("fermer la porte");
-            }
-            else{
-                this.value = "close"
-                $("#porte").html("Ouvrir la porte");
-            }
-            payload = { "door": this.value } 
-            
-            // Publish LED brightness.
-                var message = new Paho.Message(                                                // (11)
-                   JSON.stringify(payload)
-                );
-
-                message.destinationName = TOPIC;                                               // (12)
-                message.qos = 2;
-                message.retained = true;                                                       // (13)
-                client.send(message);
-        });
         
         
         $( "#alarm" ).click(function() {
             
             if(this.value == "off"){
                 this.value = "on"
-                $("#alarm").html("fermer l'alarme");
+                $("#alarm").html("Fermer le systeme d'alarme");
             }
             else{
                 this.value = "off"
-                $("#alarm").html("Ouvrir l'alarme");
+                $("#alarm").html("Ouvrir le systeme d'alarme");
             }
-            payload = { "alarm": this.value } 
+            payload = { "ALARM": this.value } 
             
             // Publish LED brightness.
                 var message = new Paho.Message(                                                // (11)
@@ -127,7 +159,7 @@
                 );
 
                 message.destinationName = TOPIC;                                               // (12)
-                message.qos = 2;
+                message.qos = 1;
                 message.retained = true;                                                       // (13)
                 client.send(message);
         });
@@ -142,8 +174,9 @@
     <br><br>
     Connected to MQTT Broker: <span id="connected">No</span>
     <br><br>
-    <button type="button" value="off" id="ledPrincipale">Ouvrir la lumiere</button>
-    <button type="button" value="close" id="porte">Ouvrir la porte</button>
-    <button type="button" value="off" id="alarm">Ouvrir l'alarme</button>
+    <h1 style="color:red" id="messageFeu"> </h1>
+    <h1 style="color:red" id="messageGaz"> </h1>
+    <button type="button" value="off" id="ventilation">Ouvrir la ventilation</button>
+    <button type="button" value="off" id="alarm">Ouvrir le systeme d'alarme</button>
 </body>
 </html>

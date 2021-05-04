@@ -39,9 +39,13 @@ client = None
 def myISR(ev=None):
     global TOPIC
     print("Flame is detected !")
-    data = {'FLAME_STATE':'ON'}
+    data = {'FLAME_STATE':'on'}
     client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
-    print("send {data} to {TOPIC}")
+    print("send FLAME_STATE = " + data['FLAME_STATE'] + " to " +  TOPIC)
+    time.sleep(5)
+    data = {'FLAME_STATE':'off'}
+    client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
+    print("send FLAME_STATE = " + data['FLAME_STATE'] + " to " +  TOPIC)
 
 
 def init():
@@ -88,15 +92,15 @@ def loop():
         # Récupération de la valeur du sensor et envoit du msg
         gas_val = GasSensor.read(adc)
         if(gas_val > 50):
-            data = {'GAS_STATE':'ON'}
+            data = {'GAS_STATE':'on'}
             client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
-            print("send {data} to {TOPIC}")
+            print("send GAS_STATE = " + data['GAS_STATE'] + " to " +  TOPIC)
             time.sleep(1)
             
         if (GAS_SENSOR_PREVIOUS_VAL >= 50 and gas_val < 50):
-            data = {'GAS_STATE':'OFF'}
+            data = {'GAS_STATE':'off'}
             client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
-            print("send {data} to {TOPIC}")
+            print("send GAS_STATE = " + data['GAS_STATE'] + " to " +  TOPIC)
             time.sleep(1)
         
 
@@ -106,7 +110,7 @@ def loop():
         
         
         GAS_SENSOR_PREVIOUS_VAL = gas_val
-        time.sleep(0.5)
+        time.sleep(0.7)
         
         
         
