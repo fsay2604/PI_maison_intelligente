@@ -13,11 +13,13 @@ import sys
 from ADCDevice import *
 from Sensor.flame_sensor import Flame_Sensor
 from Sensor.gas_sensor import Gas_Sensor
+#import Sensor.Freenove_DHT as DHT
 import json
 import time
 
 # Global variables
 FlamePin = 15
+#TempPin = 35
 
 GasSensor = None
 GAS_SENSOR_PREVIOUS_VAL = 0
@@ -66,7 +68,7 @@ def init():
     GPIO.add_event_detect(FlamePin, GPIO.FALLING, callback=myISR)
     
     GasSensor = Gas_Sensor()
-    #TempSensor = Sensor.Freenove_DHT.DHT()
+    #TempSensor = DHT.DHT(TempPin)
 
 # Fonction qui va loop a l'infini et va lire les valeurs lu des differents sensor.
 # Lorsque les valeurs depassent un certain niveau, on va publier un message.
@@ -82,7 +84,6 @@ def loop():
     while True:
         
         # Récupération de la valeur du sensor et envoit du msg
-        #flame_val = FlameSensor.read(adc)
         readFlamme()
         # Récupération de la valeur du sensor et envoit du msg
         gas_val = GasSensor.read(adc)
@@ -100,7 +101,8 @@ def loop():
         
 
         # Récupération de la valeur du sensor et envoit du msg
-        #TempSensor.read()
+        #TempValue = TempSensor.readDHT11()
+        #print("Humidity : %.2f, \t Temperature : %.2f \n"%(TempSensor.humidity,TempSensor.temperature))
         
         
         GAS_SENSOR_PREVIOUS_VAL = gas_val
@@ -129,6 +131,7 @@ def on_connect(client, userdata, flags, rc):
 def signal_handler(sig, frame):
     """Capture Control+C and disconnect from Broker."""
     client.disconnect() # Graceful disconnection.
+    #GPIO.cleanup()
     sys.exit(0)
 
 def init_mqtt():
