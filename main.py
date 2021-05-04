@@ -23,7 +23,7 @@ Device.pin_factory = PiGPIOFactory() # Set GPIOZero to use PiGPIO by default.
 
 
 # Global Variables
-BROKER_HOST = '192.168.137.213'                                                                      # (2)
+BROKER_HOST = '192.168.137.213'                                                                       # (2)
 BROKER_PORT = 1883
 CLIENT_ID = "SYS_ALARME"                                                                         # (3)
 TOPIC = "SENSORS" 
