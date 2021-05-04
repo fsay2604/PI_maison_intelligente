@@ -21,6 +21,8 @@ import time
 FlamePin = 15
 TempPin = 35
 
+FlameSensor = None
+FLAME_SENSOR_PREVIOUS_VAL = 0
 GasSensor = None
 GAS_SENSOR_PREVIOUS_VAL = 0
 Temp_sensor = None #(DHT)
@@ -34,7 +36,7 @@ CLIENT_ID = 'SYS_ALARME_SENSORS'
 client = None
 
 
-
+"""
 # Callback qui s'execute lors de la detection de l'event
 def myISR(ev=None):
     global TOPIC
@@ -42,7 +44,7 @@ def myISR(ev=None):
     data = {'FLAME_STATE':'on'}
     client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
     print("send FLAME_STATE = " + data['FLAME_STATE'] + " to " +  TOPIC)
-
+"""
 
 
 def init():
@@ -65,8 +67,8 @@ def init():
 
     #Flame sensor init
     GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(FlamePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(FlamePin, GPIO.FALLING, callback=myISR)
+    #GPIO.setup(FlamePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #GPIO.add_event_detect(FlamePin, GPIO.FALLING, callback=myISR)
     
     GasSensor = Gas_Sensor()
     TempSensor = DHT.DHT(TempPin)
@@ -86,21 +88,35 @@ def loop():
     while True:
         
         # Récupération de la valeur du sensor et envoit du msg
-        readFlamme()
+        FlameSensor = readFlamme()
+        print(FlameSensor)
+        if(FlameSensor > 10):
+            data = {'FLAME_STATE':'on'}
+            client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
+            print("send FLAME_STATE = " + data['FLAME_STATE'] + " to " +  TOPIC)
+            time.sleep(0.5)
+            
+        if (FLAME_SENSOR_PREVIOUS_VAL >= 10 and FlameSensor < 10):
+            data = {'FLAME_STATE':'off'}
+            client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
+            print("send FLAME_STATE = " + data['FLAME_STATE'] + " to " +  TOPIC)
+            time.sleep(0.5)
+        
+        
         # Récupération de la valeur du sensor et envoit du msg
         gas_val = GasSensor.read(adc)
         if(gas_val > 50):
             data = {'GAS_STATE':'on'}
             client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
             print("send GAS_STATE = " + data['GAS_STATE'] + " to " +  TOPIC)
-            time.sleep(1)
+            time.sleep(0.5)
             
         if (GAS_SENSOR_PREVIOUS_VAL >= 50 and gas_val < 50):
             data = {'GAS_STATE':'off'}
             client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
             print("send GAS_STATE = " + data['GAS_STATE'] + " to " +  TOPIC)
-            time.sleep(1)
-        
+            time.sleep(0.5)
+        #print(gas_val)
         
         
         # Récupération de la valeur du sensor et envoit du msg
@@ -111,18 +127,19 @@ def loop():
                 data = {'VENTILATION':'on'}
                 client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
                 print("send VENTILATION = " + data['VENTILATION'] + " to " +  TOPIC)
-                time.sleep(1)
+                time.sleep(0.5)
                 
             if (TEMP_SENSOR_PREVIOUS_VAL >= 30 and TempSensor.temperature < 30):
                 data = {'VENTILATION':'off'}
                 client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
                 print("send VENTILATION = " + data['VENTILATION'] + " to " +  TOPIC)
-                time.sleep(1)
-            print(TempSensor.temperature)
+                time.sleep(0.5)
+            #print(TempSensor.temperature)
         
         
         GAS_SENSOR_PREVIOUS_VAL = gas_val
         TEMP_SENSOR_PREVIOUS_VAL = TempSensor.temperature
+        FLAME_SENSOR_PREVIOUS_VAL = FlameSensor
         time.sleep(0.7)
         
         
@@ -148,7 +165,7 @@ def on_connect(client, userdata, flags, rc):
 def signal_handler(sig, frame):
     """Capture Control+C and disconnect from Broker."""
     client.disconnect() # Graceful disconnection.
-    #GPIO.cleanup()
+    GPIO.cleanup()
     sys.exit(0)
 
 def init_mqtt():
