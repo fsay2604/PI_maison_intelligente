@@ -13,22 +13,22 @@ import sys
 from ADCDevice import *
 from Sensor.flame_sensor import Flame_Sensor
 from Sensor.gas_sensor import Gas_Sensor
-import Sensor.Freenove_DHT as DHT
+#import Sensor.Freenove_DHT as DHT
 import json
 import time
 
 # Global variables
 FlamePin = 15
-TempPin = 35
+#TempPin = 35
 
 GasSensor = None
 GAS_SENSOR_PREVIOUS_VAL = 0
-Temp_sensor = None #(DHT)
-TEMP_SENSOR_PREVIOUS_VAL = 0
+#Temp_sensor = None #(DHT)
+#TEMP_SENSOR_PREVIOUS_VAL = 0
 adc = ADCDevice()
 
 TOPIC = 'SENSORS'
-BROKER_HOST = '127.0.0.1'
+BROKER_HOST = '192.168.137.213'
 BROKER_PORT = 1883
 CLIENT_ID = 'SYS_ALARME_SENSORS'
 client = None
@@ -42,14 +42,17 @@ def myISR(ev=None):
     data = {'FLAME_STATE':'on'}
     client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
     print("send FLAME_STATE = " + data['FLAME_STATE'] + " to " +  TOPIC)
-
+    time.sleep(5)
+    data = {'FLAME_STATE':'off'}
+    client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
+    print("send FLAME_STATE = " + data['FLAME_STATE'] + " to " +  TOPIC)
 
 
 def init():
     global FlameSensor
     global GasSensor
     global FlamePin
-    global TempSensor
+    #global TempSensor
     global adc
 
     # ADC
@@ -69,7 +72,7 @@ def init():
     GPIO.add_event_detect(FlamePin, GPIO.FALLING, callback=myISR)
     
     GasSensor = Gas_Sensor()
-    TempSensor = DHT.DHT(TempPin)
+    #TempSensor = DHT.DHT(TempPin)
 
 # Fonction qui va loop a l'infini et va lire les valeurs lu des differents sensor.
 # Lorsque les valeurs depassent un certain niveau, on va publier un message.
@@ -79,8 +82,7 @@ def loop():
     global FLAME_SENSOR_PREVIOUS_VAL
     global GAS_SENSOR_PREVIOUS_VAL
     global GasSensor
-    global TempSensor
-    global TEMP_SENSOR_PREVIOUS_VAL
+    #global TempSensor
     global adc
 
     while True:
@@ -101,28 +103,13 @@ def loop():
             print("send GAS_STATE = " + data['GAS_STATE'] + " to " +  TOPIC)
             time.sleep(1)
         
-        
-        
+
         # Récupération de la valeur du sensor et envoit du msg
-        TempValue = TempSensor.readDHT11()
-        if TempValue is TempSensor.DHTLIB_OK:
-        
-            if(TempSensor.temperature > 30):
-                data = {'VENTILATION':'on'}
-                client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
-                print("send VENTILATION = " + data['VENTILATION'] + " to " +  TOPIC)
-                time.sleep(1)
-                
-            if (TEMP_SENSOR_PREVIOUS_VAL >= 30 and TempSensor.temperature < 30):
-                data = {'VENTILATION':'off'}
-                client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
-                print("send VENTILATION = " + data['VENTILATION'] + " to " +  TOPIC)
-                time.sleep(1)
-            print(TempSensor.temperature)
+        #TempValue = TempSensor.readDHT11()
+        #print("Humidity : %.2f, \t Temperature : %.2f \n"%(TempSensor.humidity,TempSensor.temperature))
         
         
         GAS_SENSOR_PREVIOUS_VAL = gas_val
-        TEMP_SENSOR_PREVIOUS_VAL = TempSensor.temperature
         time.sleep(0.7)
         
         
@@ -156,6 +143,7 @@ def init_mqtt():
 
     client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
     client.on_connect = on_connect
+    
 
     # create connection, the three parameters are broker address, broker port number, and keep-alive time respectively
     client.connect(BROKER_HOST, BROKER_PORT)
