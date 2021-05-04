@@ -26,7 +26,8 @@ Device.pin_factory = PiGPIOFactory() # Set GPIOZero to use PiGPIO by default.
 BROKER_HOST = "127.0.0.1"                                                                       # (2)
 BROKER_PORT = 1883
 CLIENT_ID = "SYS_ALARME"                                                                         # (3)
-TOPIC = "SENSORS"                                                                                   # (4)
+TOPIC = "SENSORS" 
+TOPIC_WEB = "MAINBOARD"                                                                                  # (4)
 client = None   # MQTT client instance. See init_mqtt()   
 
 ## PINS (header)
@@ -38,37 +39,34 @@ buzzer = None
 # Global variables
 Leds = [None, None]
 
-ventilation = ventilation()
+ventilation = ventilation() 
 lcd = lcd()
 
 
-fire_state = {
-    'status' : 'off'
-}
+fire_state = { 'status' : 'off' }
 
 
-gas_state = {
-    'status' : 'off'
-}
+gas_state = { 'status' : 'off' }
 
-
+ventilation_state = {'status' : 'off'}
+alarm_state = {'status' : 'off'}
 
 def button_pressed():
+    # alarm_state on ou off
     pass
 
 
 # Functions
 def init():
-    global leds
+    global Leds
     global ButtonState
     global buzzer
+    global ventilation
     
-    
-    Leds[0] = LED(16)
+    Leds[0] = LED(16) # Red
     Leds[0].off()
-    Leds[1] = LED(21)
+    Leds[1] = LED(21) # Green
     Leds[1].off()
-   
    
     ButtonState = Button(ButtonPin, pull_up=True, bounce_time=0.1)
     ButtonState.when_pressed = button_pressed
@@ -76,8 +74,38 @@ def init():
     buzzer = Buzzer(BuzzerPin,active_high = False)
     buzzer.off()
 
+# Fonction qui gere les receptions de messages 
+def logic():
+    global fire_state
+    global gas_state
+    global ventilation_state
+    global alarm_state
 
+    global buzzer
+    global Leds 
+    global ventilation
+    global lcd
 
+    # Si l'alarme est active
+    if alarm_state == 'on':
+        # Verifie si l'alarme doit partir en fonction des states
+        if fire_state['status'] or gas_state['status'] == 'on':
+            buzzer.on()     # part l'alarme
+            Leds[0].blink() # set la lumiere rouge a blink pour signifier un probleme
+            lcd.set_message("Alarm active \n and triggered!")
+
+            # Part la ventilation si le gas est detecté
+            if gas_state['state'] == 'on':
+                ventilation.move(0.25)  # part la ventilation
+
+        #  Reinitilise les composants
+        if fire_state['status'] and gas_state['status'] == 'off':
+            buzzer.off()    # Ferme l'alarme
+            Leds[0].off()   # Ferme la led rouge
+            Leds[1].on()    # Allume la led verte
+            lcd.set_message("Alarm active.")
+    else:
+        lcd.set_message("Alarm inactive.")
 
 """
 MQTT Related Functions and Callbacks
@@ -89,8 +117,8 @@ def on_connect(client, user_data, flags, connection_result_code):
        re-connection will also results in the re-subscription occurring."""
 
     # Subscribe to the topic 
-    client.subscribe(TOPIC, qos=2)   # Led 
-
+    client.subscribe(TOPIC, qos=1)   # Recevoir les donnees des sensors
+    client.subscribe(TOPIC_WEB, qos=1)   # Recevoir les donnees du web
 
 
 def on_disconnect(client, user_data, disconnection_result_code):                         
@@ -98,30 +126,62 @@ def on_disconnect(client, user_data, disconnection_result_code):
     pass
 
 
-
 def on_message(client, userdata, msg):
     """Callback called when a message is received on a subscribed topic."""
-    #logger.debug("Received message for topic {}: {}".format( msg.topic, msg.payload))
-    
+    global fire_state
+    global gas_state
+    global ventilation_state
+    global alarm_state
+
     data = None
-
-
     data = json.loads(msg.payload.decode("UTF-8"))
 
 
     if "FLAME_STATE" in data:
         print("message received", str(msg.payload.decode("utf-8")))
         print("message Topic= ", msg.topic)
-        #setLed(data)
+        # Gestion du state de la ventilation
+        if data['status'] == 'on':
+            fire_state['status'] = 'on'
+        if data['status'] == 'off':
+            fire_state['status'] = 'off'
+
+        # Envoit au web du message recu pour update l'UI
+        client.publish(TOPIC_WEB,data);
+
     if "GAS_STATE" in data:
         print("message received", str(msg.payload.decode("utf-8")))
         print("message Topic= ", msg.topic)
-        #setDoor(data)
+        # Gestion du state de la ventilation
+        if data['status'] == 'on':
+            gas_state['status'] = 'on'
+        if data['status'] == 'off':
+            gas_state['status'] = 'off'
+
+        # Envoit au web du message recu pour update l'UI
+        client.publish(TOPIC_WEB,data);
+
     if "VENTILATION" in data:
-        pass
-        #setAlarm(data)
-            
-   
+        print("message received", str(msg.payload.decode("utf-8")))
+        print("message Topic= ", msg.topic)
+        # Gestion du state de la ventilation
+        if data['status'] == 'on':
+            ventilation_state['status'] = 'on'
+        if data['status'] == 'off':
+            ventilation_state['status'] = 'off'
+       
+    if "ALARM" in data:
+        print("message received", str(msg.payload.decode("utf-8")))
+        print("message Topic= ", msg.topic)
+        # Gestion du state du systeme d'alarme
+        if data['status'] == 'on':
+            alarm_state['status'] = 'on'
+        if data['status'] == 'off':
+            alarm_state['status'] = 'off'
+
+
+    # Gestion de la logique en fonction des states
+    logic()
 
 
 def signal_handler(sig, frame):
