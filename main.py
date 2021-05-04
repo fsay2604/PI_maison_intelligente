@@ -97,12 +97,15 @@ def logic():
             # Part la ventilation si le gas est detecté
             if gas_state['state'] == 'on':
                 ventilation.move(0.25)  # part la ventilation
+            else:
+                ventilation.move(0) # Ferme la ventilation
 
         #  Reinitilise les composants
         if fire_state['status'] and gas_state['status'] == 'off':
             buzzer.off()    # Ferme l'alarme
             Leds[0].off()   # Ferme la led rouge
             Leds[1].on()    # Allume la led verte
+            ventilation.move(0) # Ferme la ventilation
             lcd.set_message("Alarm active.")
     else:
         lcd.set_message("Alarm inactive.")
