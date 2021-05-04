@@ -8,7 +8,8 @@
     <script type="text/javascript" charset="utf-8">
 
         const CLIENT_ID = String(Math.floor(Math.random() * 10e16))                            // (2)
-        const TOPIC   = "MAINBOARD";                                                                 // (3)
+        const TOPIC_PUB   = "MAINBOARD";   
+        const TOPIC_SUB = "MAINBOARD_WEB"                                                              // (3)
 
         // Web Socket MQTT Client Object.
         const client = new Paho.Client(location.hostname, Number(location.port), CLIENT_ID);   // (4)
@@ -18,7 +19,7 @@
             console.log("Connected to MQTT Broker");
             $("#connected").html("Yes");
 
-            client.subscribe(TOPIC, qos=0);
+            client.subscribe(TOPIC_SUB, qos=0);
         };
 
         client.connect({                                                                       // (7)
@@ -133,7 +134,7 @@
                    JSON.stringify(payload)
                 );
 
-                message.destinationName = TOPIC;                                               // (12)
+                message.destinationName = TOPIC_PUB;                                               // (12)
                 message.qos = 0;
                 message.retained = true;                                                       // (13)
                 client.send(message);
@@ -159,7 +160,7 @@
                    JSON.stringify(payload)
                 );
 
-                message.destinationName = TOPIC;                                               // (12)
+                message.destinationName = TOPIC_PUB;                                               // (12)
                 message.qos = 0;
                 message.retained = true;                                                       // (13)
                 client.send(message);

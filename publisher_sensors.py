@@ -34,7 +34,6 @@ CLIENT_ID = 'SYS_ALARME_SENSORS'
 client = None
 
 
-
 # Callback qui s'execute lors de la detection de l'event
 def myISR(ev=None):
     global TOPIC
@@ -87,6 +86,7 @@ def loop():
         
         # Récupération de la valeur du sensor et envoit du msg
         readFlamme()
+
         # Récupération de la valeur du sensor et envoit du msg
         gas_val = GasSensor.read(adc)
         if(gas_val > 50):
