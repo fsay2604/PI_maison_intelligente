@@ -1,5 +1,6 @@
 from gpiozero import Device, Motor, OutputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
+import time
 
 class ventilation:
     # defining variables
@@ -20,4 +21,11 @@ class ventilation:
         elif(speed < 0):
             speed = speed*-1
             self.motor.backward(speed)
+            
+if __name__ == '__main__':
+    print("program starting")
+    m = ventilation()
+    while True:
+        m.move(0.5)
+    print("ending")
     

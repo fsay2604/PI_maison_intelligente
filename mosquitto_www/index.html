@@ -18,7 +18,7 @@
             console.log("Connected to MQTT Broker");
             $("#connected").html("Yes");
 
-            client.subscribe(TOPIC);
+            client.subscribe(TOPIC, qos=0);
         };
 
         client.connect({                                                                       // (7)
@@ -41,17 +41,17 @@
         // Callback when a new message arrives at a subscribed topic.
         client.onMessageArrived = function onMessageArrived(message) {                         // (9)
 
-            //console.log("onMessageArrived:" + message.payloadString + " for topic " + message.destinationName);
-
+            console.log("onMessageArrived:" + message.payloadString + " for topic " + message.destinationName);
+            
             var data = JSON.parse(message.payloadString);
 
 
             if (message.destinationName === TOPIC) {
 
                 //Si Ventilation fait partie du message, change le bouton approprier
-                if(data.VENTILATION){
+                if(data.ventilation){
                     
-                    if(data.VENTILATION == "off"){
+                    if(data.ventilation == "off"){
                         $("#ventilation").val("off");
                         $("#ventilation").html("Ouvrir la Ventilation");
                     }
@@ -65,9 +65,9 @@
                 
                 
                 //Si Ventilation fait partie du message, change le bouton approprier
-                if(data.ALARM){
+                if(data.alarm){
                     
-                    if(data.ALARM == "off"){
+                    if(data.alarm == "off"){
                         $("#alarm").val("off");
                         $("#alarm").html("Ouvrir le systeme d'alarme");
                     }
@@ -80,9 +80,9 @@
                 
                 
                 //Si il y le feux, affiche ou enleve le message lorsque le feux est off ou on
-                if(data.FLAME_STATE){
+                if(data.flame_state){
                     
-                    if(data.FLAME_STATE == "off"){
+                    if(data.flame_state == "off"){
                         $("#messageFeu").html("");
                     }
                     else{
@@ -93,12 +93,13 @@
                 
                 
                  //Si il y le gas, affiche ou enleve le message lorsque le gas est off ou on
-                if(data.GAS_STATE){
+                if(data.gas_state){
                     
-                    if(data.GAS_STATE == "off"){
+                    
+                    if(data.gas_state == "off"){
                         $("#messageGaz").html("");
                     }
-                    else{
+                    else if (data.gas_state == "on"){
                         $("#messageGaz").html("Le gaz est trop elever , veuillez quitter votre domicile");
                     }
                     
@@ -127,13 +128,13 @@
             }
             payload = { "VENTILATION": this.value } 
             
-            
+                
                 var message = new Paho.Message(                                                // (11)
                    JSON.stringify(payload)
                 );
 
                 message.destinationName = TOPIC;                                               // (12)
-                message.qos = 1;
+                message.qos = 0;
                 message.retained = true;                                                       // (13)
                 client.send(message);
             
@@ -153,13 +154,13 @@
             }
             payload = { "ALARM": this.value } 
             
-            // Publish LED brightness.
+           
                 var message = new Paho.Message(                                                // (11)
                    JSON.stringify(payload)
                 );
 
                 message.destinationName = TOPIC;                                               // (12)
-                message.qos = 1;
+                message.qos = 0;
                 message.retained = true;                                                       // (13)
                 client.send(message);
         });

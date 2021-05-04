@@ -27,11 +27,11 @@ class lcd:
                 exit(1)
         # Create LCD, passing in MCP GPIO adapter.
         self.lcd = Adafruit_LCD1602.Adafruit_CharLCD(pin_rs=0, pin_e=2, pins_db=[4,5,6,7], GPIO=self.mcp)
+        self.mcp.output(3,1)     # turn on LCD backlight
+        self.lcd.begin(16,2)     # set number of LCD lines and columns 
         
     def set_message(self,msg):
-        self.lcd.clear()
-        self.mcp.output(3,1)     # turn on LCD backlight
-        self.lcd.begin(16,2)     # set number of LCD lines and columns   
+        self.lcd.clear()  
         self.lcd.setCursor(0,0)  # set cursor position
         self.lcd.message(msg)
         
