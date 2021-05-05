@@ -227,7 +227,7 @@ def on_message(client, userdata, msg):
         
         
         #print(data)
-        logic()
+    logic()
 
 
 def signal_handler(sig, frame):
