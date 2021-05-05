@@ -54,7 +54,7 @@ def button_pressed():
         alarm_state['alarm'] = 'off'
     elif alarm_state['alarm'] == 'off':
         alarm_state['alarm'] = 'on'
-        
+    client.publish(TOPIC_SUB,json.dumps(alarm_state))  
     client.publish(TOPIC_PUB,json.dumps(alarm_state))
     
 

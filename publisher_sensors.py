@@ -93,7 +93,7 @@ def loop():
         # Récupération de la valeur du sensor et envoit du msg
 
         FlameSensor = readFlamme()
-        print(FlameSensor)
+        #print(FlameSensor)
         if(FlameSensor > 10):
             data = {'FLAME_STATE':'on'}
             client.publish(TOPIC, payload=json.dumps(data), qos=0, retain=False)
@@ -106,9 +106,7 @@ def loop():
             print("send FLAME_STATE = " + data['FLAME_STATE'] + " to " +  TOPIC)
             time.sleep(0.5)
         
-        
-
-        
+             
 
 
         # Récupération de la valeur du sensor et envoit du msg
