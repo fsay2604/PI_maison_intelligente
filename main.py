@@ -27,7 +27,8 @@ BROKER_HOST = '192.168.137.213'                                                 
 BROKER_PORT = 1883
 CLIENT_ID = "SYS_ALARME"                                                                         # (3)
 TOPIC = "SENSORS" 
-TOPIC_WEB = "MAINBOARD"                                                                                  # (4)
+TOPIC_PUB = "MAINBOARD_WEB"  
+TOPIC_SUB = "MAINBOARD"                                                                                # (4)
 client = None   # MQTT client instance. See init_mqtt()   
 
 ## PINS (header)
@@ -54,7 +55,7 @@ def button_pressed():
     elif alarm_state['alarm'] == 'off':
         alarm_state['alarm'] = 'on'
         
-    client.publish(TOPIC_WEB,json.dumps(alarm_state))
+    client.publish(TOPIC_PUB,json.dumps(alarm_state))
     
 
 
@@ -125,7 +126,7 @@ def logic():
             if fire_state['flame_state'] == 'on':
                 time.sleep(5)
                 fire_state['flame_state'] = 'off'
-                client.publish(TOPIC_WEB,json.dumps(fire_state))
+                client.publish(TOPIC_PUB,json.dumps(fire_state))
 
         #  Reinitilise les composants
         if fire_state['flame_state'] and gas_state['gas_state'] == 'off':
@@ -152,7 +153,7 @@ def on_connect(client, user_data, flags, connection_result_code):
 
     # Subscribe to the topic 
     client.subscribe(TOPIC, qos=0)   # Recevoir les donnees des sensors
-    #client.subscribe(TOPIC_WEB, qos=0)   # Recevoir les donnees du web
+    client.subscribe(TOPIC_SUB, qos=0)   # Recevoir les donnees du web
 
 
 def on_disconnect(client, user_data, disconnection_result_code):                         
@@ -181,7 +182,7 @@ def on_message(client, userdata, msg):
         if data['FLAME_STATE'] == 'off':
             fire_state['flame_state'] = 'off'
         
-        client.publish(TOPIC_WEB,json.dumps(fire_state))
+        client.publish(TOPIC_PUB,json.dumps(fire_state))
 
 
     if "GAS_STATE" in data:
@@ -194,7 +195,7 @@ def on_message(client, userdata, msg):
             gas_state['gas_state'] = 'off'
         
         
-        client.publish(TOPIC_WEB,json.dumps(gas_state))
+        client.publish(TOPIC_PUB,json.dumps(gas_state))
 
 
 
@@ -207,7 +208,7 @@ def on_message(client, userdata, msg):
         if data['VENTILATION'] == 'off':
             ventilation_state['ventilation'] = 'off'
             
-        client.publish(TOPIC_WEB,json.dumps(ventilation_state))
+        client.publish(TOPIC_PUB,json.dumps(ventilation_state))
        
     if "ALARM" in data:
         #print("message received", str(msg.payload.decode("utf-8")))
@@ -218,7 +219,7 @@ def on_message(client, userdata, msg):
         if data['ALARM'] == 'off':
             alarm_state['alarm'] = 'off'
             
-        client.publish(TOPIC_WEB,json.dumps(alarm_state))
+        client.publish(TOPIC_PUB,json.dumps(alarm_state))
 
 
     # Gestion de la logique en fonction des states
@@ -266,9 +267,6 @@ def init_mqtt():
 
     # Connect to Broker.
     client.connect(BROKER_HOST, BROKER_PORT)
-    
-    #subscribe au file qui a flask
-    #client.subscribe(TOPIC, qos=2)
 
 init()
 init_mqtt()
