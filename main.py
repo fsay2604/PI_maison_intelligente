@@ -168,65 +168,66 @@ def on_message(client, userdata, msg):
     global ventilation_state
     global alarm_state
 
-    data = None
-    
-    data = json.loads(msg.payload.decode("UTF-8"))
-
-
-    if "FLAME_STATE" in data:
-        #print("message received", str(msg.payload.decode("utf-8")))
-        #print("message Topic= ", msg.topic)
-        # Gestion du state de la ventilation
-        if data['FLAME_STATE'] == 'on':
-            fire_state['flame_state'] = 'on'
-        if data['FLAME_STATE'] == 'off':
-            fire_state['flame_state'] = 'off'
+    if alarm_state['alarm'] == 'on':
+        data = None
         
-        client.publish(TOPIC_PUB,json.dumps(fire_state))
+        data = json.loads(msg.payload.decode("UTF-8"))
 
 
-    if "GAS_STATE" in data:
-        #print("message received", str(msg.payload.decode("utf-8")))
-        #print("message Topic= ", msg.topic)
-        # Gestion du state de la ventilation
-        if data['GAS_STATE'] == 'on':
-            gas_state['gas_state'] = 'on'
-        if data['GAS_STATE'] == 'off':
-            gas_state['gas_state'] = 'off'
-        
-        
-        client.publish(TOPIC_PUB,json.dumps(gas_state))
-
-
-
-    if "VENTILATION" in data:
-        #print("message received", str(msg.payload.decode("utf-8")))
-        #print("message Topic= ", msg.topic)
-        # Gestion du state de la ventilation
-        if data['VENTILATION'] == 'on':
-            ventilation_state['ventilation'] = 'on'
-        if data['VENTILATION'] == 'off':
-            ventilation_state['ventilation'] = 'off'
+        if "FLAME_STATE" in data:
+            #print("message received", str(msg.payload.decode("utf-8")))
+            #print("message Topic= ", msg.topic)
+            # Gestion du state de la ventilation
+            if data['FLAME_STATE'] == 'on':
+                fire_state['flame_state'] = 'on'
+            if data['FLAME_STATE'] == 'off':
+                fire_state['flame_state'] = 'off'
             
-        client.publish(TOPIC_PUB,json.dumps(ventilation_state))
-       
-    if "ALARM" in data:
-        #print("message received", str(msg.payload.decode("utf-8")))
-        #print("message Topic= ", msg.topic)
-        # Gestion du state du systeme d'alarme
-        if data['ALARM'] == 'on':
-            alarm_state['alarm'] = 'on'
-        if data['ALARM'] == 'off':
-            alarm_state['alarm'] = 'off'
+            client.publish(TOPIC_PUB,json.dumps(fire_state))
+
+
+        if "GAS_STATE" in data:
+            #print("message received", str(msg.payload.decode("utf-8")))
+            #print("message Topic= ", msg.topic)
+            # Gestion du state de la ventilation
+            if data['GAS_STATE'] == 'on':
+                gas_state['gas_state'] = 'on'
+            if data['GAS_STATE'] == 'off':
+                gas_state['gas_state'] = 'off'
             
-        client.publish(TOPIC_PUB,json.dumps(alarm_state))
+            
+            client.publish(TOPIC_PUB,json.dumps(gas_state))
 
 
-    # Gestion de la logique en fonction des states
-    
-    
-    #print(data)
-    logic()
+
+        if "VENTILATION" in data:
+            #print("message received", str(msg.payload.decode("utf-8")))
+            #print("message Topic= ", msg.topic)
+            # Gestion du state de la ventilation
+            if data['VENTILATION'] == 'on':
+                ventilation_state['ventilation'] = 'on'
+            if data['VENTILATION'] == 'off':
+                ventilation_state['ventilation'] = 'off'
+                
+            client.publish(TOPIC_PUB,json.dumps(ventilation_state))
+           
+        if "ALARM" in data:
+            #print("message received", str(msg.payload.decode("utf-8")))
+            #print("message Topic= ", msg.topic)
+            # Gestion du state du systeme d'alarme
+            if data['ALARM'] == 'on':
+                alarm_state['alarm'] = 'on'
+            if data['ALARM'] == 'off':
+                alarm_state['alarm'] = 'off'
+                
+            client.publish(TOPIC_PUB,json.dumps(alarm_state))
+
+
+        # Gestion de la logique en fonction des states
+        
+        
+        #print(data)
+        logic()
 
 
 def signal_handler(sig, frame):
