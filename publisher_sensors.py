@@ -108,7 +108,7 @@ def loop():
         
         
 
-        readFlamme()
+        
 
 
         # Récupération de la valeur du sensor et envoit du msg
