@@ -168,12 +168,29 @@ def on_message(client, userdata, msg):
     global ventilation_state
     global alarm_state
 
-    if alarm_state['alarm'] == 'on':
-        data = None
+    data = None
         
-        data = json.loads(msg.payload.decode("UTF-8"))
+    data = json.loads(msg.payload.decode("UTF-8"))
 
-
+    if "VENTILATION" in data:
+        # Gestion du state de la ventilation
+        if data['VENTILATION'] == 'on':
+            ventilation_state['ventilation'] = 'on'
+        if data['VENTILATION'] == 'off':
+            ventilation_state['ventilation'] = 'off'
+            
+        client.publish(TOPIC_PUB,json.dumps(ventilation_state))
+        
+    if "ALARM" in data:
+        # Gestion du state du systeme d'alarme
+        if data['ALARM'] == 'on':
+            alarm_state['alarm'] = 'on'
+        if data['ALARM'] == 'off':
+            alarm_state['alarm'] = 'off'
+        client.publish(TOPIC_PUB,json.dumps(alarm_state))
+        
+        
+    if alarm_state['alarm'] == 'on':
         if "FLAME_STATE" in data:
             #print("message received", str(msg.payload.decode("utf-8")))
             #print("message Topic= ", msg.topic)
@@ -200,27 +217,9 @@ def on_message(client, userdata, msg):
 
 
 
-        if "VENTILATION" in data:
-            #print("message received", str(msg.payload.decode("utf-8")))
-            #print("message Topic= ", msg.topic)
-            # Gestion du state de la ventilation
-            if data['VENTILATION'] == 'on':
-                ventilation_state['ventilation'] = 'on'
-            if data['VENTILATION'] == 'off':
-                ventilation_state['ventilation'] = 'off'
-                
-            client.publish(TOPIC_PUB,json.dumps(ventilation_state))
+
            
-        if "ALARM" in data:
-            #print("message received", str(msg.payload.decode("utf-8")))
-            #print("message Topic= ", msg.topic)
-            # Gestion du state du systeme d'alarme
-            if data['ALARM'] == 'on':
-                alarm_state['alarm'] = 'on'
-            if data['ALARM'] == 'off':
-                alarm_state['alarm'] = 'off'
-                
-            client.publish(TOPIC_PUB,json.dumps(alarm_state))
+
 
 
         # Gestion de la logique en fonction des states
