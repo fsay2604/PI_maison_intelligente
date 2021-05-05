@@ -47,7 +47,7 @@
             var data = JSON.parse(message.payloadString);
 
 
-            if (message.destinationName === TOPIC) {
+            if (message.destinationName === TOPIC_SUB) {
 
                 //Si Ventilation fait partie du message, change le bouton approprier
                 if(data.ventilation){
