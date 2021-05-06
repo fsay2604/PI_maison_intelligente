@@ -1,6 +1,5 @@
 # PI_maison_intelligente
-
-Projet intégrateur - IoT - Représente une maison avec des capteurs de fumée, de flamme, de température, d'humidité ....
+Etudiant: Francois Charles Hebert & Samuel Fournier - 2021
 
 
 ## Projet
