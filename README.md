@@ -16,9 +16,9 @@ Chauffage : Détecteur de température
 
 Boutons pour activé et désactivé le système.
 
-Led qui indique si le systeme est armé ou non.
+Leds (une rouge, une verte) qui indique si le systeme est armé ou non.
 
-LCD screen : Affichage de la température et l'état du système.
+LCD screen : Affichage de l'état du système
 
 
 ## Semaine 1
