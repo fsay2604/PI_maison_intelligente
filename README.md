@@ -6,19 +6,16 @@ Etudiant: Francois Charles Hebert & Samuel Fournier - 2021
 Système maison intelligente (portes, lumieres, chauffage, ventilation, capteur de flamme/fumée, sonnette intelligente)
 
 ## Capteurs / actuateurs (min. 4):
-Ventilation/clim : motor
-Detecteur de flamme
-Detecteur de gaz
-Alarme (buzzer)
-Detecteur de temperature (DHT11)(systeme de chauffage, lance la ventilation quand il fait trop chaud)
+Ventilation/clim : motor   
+Detecteur de flamme      
+Detecteur de gaz   
+Alarme (buzzer)   
+Detecteur de temperature (DHT11)(systeme de chauffage, lance la ventilation quand il fait trop chaud)   
 
 ### Interface physique
-
-Boutons pour activé et désactivé le système.
-
-Leds (une rouge, une verte) qui indique si le systeme est armé ou non.
-
-LCD screen : Affichage de l'état du système
+Boutons pour activé et désactivé le système.   
+Leds (une rouge, une verte) qui indique si le systeme est armé ou non.   
+LCD screen : Affichage de l'état du système.   
 
 
 ## Semaine 1
