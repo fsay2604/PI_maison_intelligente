@@ -7,10 +7,10 @@ Système maison intelligente (portes, lumieres, chauffage, ventilation, capteur 
 
 ## Capteurs / actuateurs (min. 4):
 Ventilation/clim : motor
-
-Detecteur de fumee: Detecteur de flamme avec buzzer
-
-Chauffage : Détecteur de température
+Detecteur de flamme
+Detecteur de gaz
+Alarme (buzzer)
+Detecteur de temperature (DHT11)(systeme de chauffage, lance la ventilation quand il fait trop chaud)
 
 ### Interface physique
 
